@@ -13,6 +13,7 @@ module Compute
     attr_reader   :api_host
     attr_reader   :api_port
     attr_reader   :api_scheme
+    attr_reader   :api_path
     attr_reader   :proxy_host
     attr_reader   :proxy_port
     
@@ -32,6 +33,7 @@ module Compute
       @authuser = options[:username] || (raise Exception::MissingArgument, "Must supply a :username")
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @api_url = options[:api_url] || (raise Exception::MissingArgument, "Must supply an :api_url")
+      @is_debug = options[:is_debug]
 
       api_uri=nil
       begin
@@ -43,6 +45,7 @@ module Compute
       @api_host = api_uri.host
       @api_port = api_uri.port
       @api_scheme = api_uri.scheme
+      @api_path = api_uri.path.sub(/\/$/, '')
 
       @retry_auth = options[:retry_auth]
       @proxy_host = options[:proxy_host]
@@ -59,7 +62,7 @@ module Compute
     def authok?
       @authok
     end
-    
+
     # This method actually makes the HTTP REST calls out to the server
     def csreq(method,server,path,port,scheme,headers = {},data = nil,attempts = 0) # :nodoc:
       start = Time.now
@@ -68,6 +71,12 @@ module Compute
       request = Net::HTTP.const_get(method.to_s.capitalize).new(path,hdrhash)
       request.body = data
       response = @http[server].request(request)
+      if @is_debug
+          puts "REQUEST: #{method} => #{path}"
+          puts data if data
+          puts "RESPONSE: #{response.body}"
+          puts '----------------------------------------'
+      end
       raise OpenStack::Compute::Exception::ExpiredAuthToken if response.code == "401"
       response
     rescue Errno::EPIPE, Timeout::Error, Errno::EINVAL, EOFError
@@ -82,7 +91,24 @@ module Compute
       OpenStack::Compute::Authentication.new(self)
       retry
     end
-    
+
+    # This is a much more sane way to make a http request to the api.
+    # Example: res = conn.req('GET', "/servers/#{id}")
+    def req(method, path, options = {})
+      server   = options[:server]   || @svrmgmthost
+      port     = options[:port]     || @svrmgmtport
+      scheme   = options[:scheme]   || @svrmgmtscheme
+      headers  = options[:headers]  || {'content-type' => 'application/json'}
+      data     = options[:data]
+      attempts = options[:attempts] || 0
+      path = @svrmgmtpath + path
+      res = csreq(method,server,path,port,scheme,headers,data,attempts)
+      if not res.code.match(/^20.$/)
+        OpenStack::Compute::Exception.raise_exception(response)
+      end
+      return res
+    end;
+
     # Returns the OpenStack::Compute::Server object identified by the given id.
     #
     #   >> server = cs.get_server(110917)
@@ -134,21 +160,32 @@ module Compute
     
     # Creates a new server instance on OpenStack Compute
     # 
-    # The argument is a hash of options.  The keys :name, :flavorId, and :imageId are required, :metadata and :personality are optional.
+    # The argument is a hash of options.  The keys :name, :flavorRef,
+    # and :imageRef are required; :metadata and :personality are optional.
     #
-    # :flavorId and :imageId are numbers identifying a particular server flavor and image to use when building the server.  The :imageId can either
-    # be a stock image, or one of your own created with the server.create_image method.
+    # :flavorRef and :imageRef are href strings identifying a particular
+    # server flavor and image to use when building the server.  The :imageRef
+    # can either be a stock image, or one of your own created with the
+    # server.create_image method.
     #
-    # The :metadata argument will take a hash of up to five key/value pairs.  This metadata will be applied to the server at the OpenStack Compute
-    # API level.
+    # The :metadata argument should be a hash of key/value pairs.  This
+    # metadata will be applied to the server at the OpenStack Compute API level.
     #
-    # The "Personality" option allows you to include up to five files, of 10Kb or less in size, that will be placed on the created server.
-    # For :personality, pass a hash of the form {'local_path' => 'server_path'}.  The file located at local_path will be base64-encoded
-    # and placed at the location identified by server_path on the new server.
+    # The "Personality" option allows you to include up to five files, # of
+    # 10Kb or less in size, that will be placed on the created server.
+    # For :personality, pass a hash of the form {'local_path' => 'server_path'}.
+    # The file located at local_path will be base64-encoded and placed at the
+    # location identified by server_path on the new server.
     #
-    # Returns a OpenStack::Compute::Server object.  The root password is available in the adminPass instance method.
+    # Returns a OpenStack::Compute::Server object.  The root password is
+    # available in the adminPass instance method.
     #
-    #   >> server = cs.create_server(:name => "New Server", :imageId => 2, :flavorId => 2, :metadata => {'Racker' => 'Fanatical'}, :personality => {'/Users/me/Pictures/wedding.jpg' => '/root/me.jpg'})
+    #   >> server = cs.create_server(
+    #        :name        => 'NewServer',
+    #        :imageRef    => 'http://172.19.0.3/v1.1/images/3',
+    #        :flavorRef   => 'http://172.19.0.3/v1.1/flavors/1',
+    #        :metadata    => {'Racker' => 'Fanatical'},
+    #        :personality => {'/home/bob/wedding.jpg' => '/root/wedding.jpg'})
     #   => #<OpenStack::Compute::Server:0x101229eb0 ...>
     #   >> server.name
     #   => "NewServer"
@@ -157,9 +194,8 @@ module Compute
     #   >> server.adminPass
     #   => "NewServerSHMGpvI"
     def create_server(options)
-      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavor ID, and image ID must be supplied" unless (options[:name] && options[:flavorId] && options[:imageId])
+      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavorRef, and imageRef, must be supplied" unless (options[:name] && options[:flavorRef] && options[:imageRef])
       options[:personality] = get_personality(options[:personality])
-      raise TooManyMetadataItems, "Metadata is limited to a total of #{MAX_PERSONALITY_METADATA_ITEMS} key/value pairs" if options[:metadata].is_a?(Hash) && options[:metadata].keys.size > MAX_PERSONALITY_METADATA_ITEMS
       data = JSON.generate(:server => options)
       response = csreq("POST",svrmgmthost,"#{svrmgmtpath}/servers",svrmgmtport,svrmgmtscheme,{'content-type' => 'application/json'},data)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)

@@ -9,7 +9,7 @@ module Compute
     #
     # Should probably never be called directly.
     def initialize(connection)
-      path = '/v1.0'
+      path = connection.api_path
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.api_host, connection.api_port)

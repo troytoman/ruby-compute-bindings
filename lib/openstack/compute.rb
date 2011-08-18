@@ -38,7 +38,6 @@ module Compute
   MAX_PERSONALITY_ITEMS = 5
   MAX_PERSONALITY_FILE_SIZE = 10240
   MAX_SERVER_PATH_LENGTH = 255
-  MAX_PERSONALITY_METADATA_ITEMS = 5
   
   # Helper method to recursively symbolize hash keys.
   def self.symbolize_keys(obj)
