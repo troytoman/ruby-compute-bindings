@@ -60,7 +60,7 @@ module Compute
   class AuthV10
     
     def initialize(connection)
-      path = '/v1.0'
+      path = connection.api_path
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)

@@ -2,15 +2,16 @@ module OpenStack
 module Compute
   class Server
     
+    require 'compute/metadata'
+
     attr_reader   :id
     attr_reader   :name
     attr_reader   :status
     attr_reader   :progress
     attr_reader   :addresses
-    attr_reader   :metadata
     attr_reader   :hostId
-    attr_reader   :imageId
-    attr_reader   :flavorId
+    attr_reader   :imageRef
+    attr_reader   :flavorRef
     attr_accessor :adminPass
     
     # This class is the representation of a single Server object.  The constructor finds the server identified by the specified
@@ -50,10 +51,10 @@ module Compute
       @status    = data["status"]
       @progress  = data["progress"]
       @addresses = OpenStack::Compute.symbolize_keys(data["addresses"])
-      @metadata  = data["metadata"]
+      @metadata  = OpenStack::Compute::ServerMetadata.new(@connection, @id)
       @hostId    = data["hostId"]
-      @imageId   = data["imageId"]
-      @flavorId  = data["flavorId"]
+      @imageRef   = data["imageRef"]
+      @flavorRef  = data["flavorRef"]
       true
     end
     alias :refresh :populate
@@ -65,7 +66,7 @@ module Compute
     #   >> flavor.name
     #   => "256 server"
     def flavor
-      OpenStack::Compute::Flavor.new(@connection,self.flavorId)
+      OpenStack::Compute::Flavor.new(@connection, self.flavorRef)
     end
     
     # Returns a new OpenStack::Compute::Image object for the image assigned to this server.
@@ -75,7 +76,7 @@ module Compute
     #   >> image.name
     #   => "Ubuntu 8.04.2 LTS (hardy)"
     def image
-      OpenStack::Compute::Image.new(@connection,self.imageId)
+      OpenStack::Compute::Image.new(@connection, self.imageRef)
     end
     
     # Sends an API request to reboot this server.  Takes an optional argument for the type of reboot, which can be "SOFT" (graceful shutdown)
@@ -133,19 +134,36 @@ module Compute
       true
     end
     
-    # Takes the existing server and rebuilds it with the image identified by the imageId argument.  If no imageId is provided, the current image
-    # will be used.
+    # The rebuild function removes all data on the server and replaces it with
+    # the specified image. The serverRef and all IP addresses will remain the
+    # same. If name and metadata are specified, they will replace existing
+    # values, otherwise they will not change. A rebuild operation always
+    # removes data injected into the file system via server personality. You
+    # may reinsert data into the filesystem during the rebuild.
     #
-    # This will wipe and rebuild the server, but keep the server ID number, name, and IP addresses the same.
+    # This method expects a hash of the form:
+    # {
+    #   :imageRef => "https://foo.com/v1.1/images/2",
+    #   :name => "newName",
+    #   :metadata => { :values => { :foo : "bar" } },
+    #   :personality => [
+    #     {
+    #       :path => "/etc/banner.txt",
+    #       :contents => : "ICAgpY2hhcmQgQmFjaA=="
+    #     }
+    #   ]
+    # }
+    #
+    # This will wipe and rebuild the server, but keep the server ID number,
+    # name, and IP addresses the same.
     #
     # Returns true if the API call succeeds.
     #
     #   >> server.rebuild!
     #   => true
-    def rebuild!(imageId = self.imageId)
-      data = JSON.generate(:rebuild => {:imageId => imageId})
-      response = @connection.csreq("POST",@svrmgmthost,"#{@svrmgmtpath}/servers/#{URI.encode(self.id.to_s)}/action",@svrmgmtport,@svrmgmtscheme,{'content-type' => 'application/json'},data)
-      OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
+    def rebuild!(options)
+      json = JSON.generate(:rebuild => options)
+      @connection.req('POST', "/servers/#{@id}/action", :data => json)
       self.populate
       true
     end
@@ -214,6 +232,14 @@ module Compute
       true
     end
     
+    # Changes the admin password.
+    # Returns the password if it succeeds.
+    def change_password!(password)
+      json = JSON.generate(:changePassword => { :adminPass => password })
+      @connection.req('POST', "/servers/#{@id}/action", :data => json)
+      @adminPass = password
+    end
+
   end
 end
 end

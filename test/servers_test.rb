@@ -15,18 +15,18 @@ json_response = %{{
       {
      "id" : 1234,
       "name" : "sample-server",
-      "imageId" : 2,
-      "flavorId" : 1,
+      "imageRef" : "http://foo.com/v1.1/2",
+      "flavorRef" : "http://foo.com/v1.1/1",
       "hostId" : "e4d909c290d0fb1ca068ffaddf22cbd0",
       "status" : "BUILD",
       "progress" : 60,
       "addresses" : {
           "public" : [
-              "67.23.10.132",
-              "67.23.10.131"
+              { "version" : 4, "addr" : "67.23.10.132" },
+              { "version" : 4, "addr" : "67.23.10.131" }
           ],
           "private" : [
-              "10.176.42.16"
+              { "version" : 4, "addr" : "10.176.42.16" }
           ]
       },
       "metadata" : {
@@ -37,16 +37,16 @@ json_response = %{{
       {
     "id" : 5678,
       "name" : "sample-server2",
-      "imageId" : 2,
-      "flavorId" : 1,
+      "imageRef" : "http://foo.com/v1.1/2",
+      "flavorRef" : "http://foo.com/v1.1/1",
       "hostId" : "9e107d9d372bb6826bd81d3542a419d6",
       "status" : "ACTIVE",
       "addresses" : {
           "public" : [
-              "67.23.10.133"
+              { "version" : 4, "addr" : "67.23.10.133" }
           ],
           "private" : [
-              "10.176.42.17"
+              { "version" : 4, "addr" : "10.176.42.17" }
           ]
       },
       "metadata" : {
@@ -70,15 +70,15 @@ json_response = %{{
   def test_get_server
 
     server=get_test_server
-    assert "sample-server", server.name
-    assert "2", server.imageId
-    assert "1", server.flavorId
-    assert "e4d909c290d0fb1ca068ffaddf22cbd0", server.hostId
-    assert "BUILD", server.status
-    assert "60", server.progress
-    assert "67.23.10.132", server.addresses[:public][0]
-    assert "67.23.10.131", server.addresses[:public][1]
-    assert "10.176.42.16", server.addresses[:private][1]
+    assert_equal "sample-server", server.name
+    assert_equal "http://foo.com/v1.1/2", server.imageRef
+    assert_equal "http://foo.com/v1.1/1", server.flavorRef
+    assert_equal "e4d909c290d0fb1ca068ffaddf22cbd0", server.hostId
+    assert_equal "BUILD", server.status
+    assert_equal 60, server.progress
+    assert_equal "67.23.10.132", server.addresses[:public][0][:addr]
+    assert_equal "67.23.10.131", server.addresses[:public][1][:addr]
+    assert_equal "10.176.42.16", server.addresses[:private][0][:addr]
 
   end
 
@@ -89,18 +89,18 @@ json_response = %{{
   "server" : {
       "id" : 1234,
       "name" : "sample-server",
-      "imageId" : 2,
-      "flavorId" : 1,
+      "imageRef" : "http://foo.com/v1.1/2",
+      "flavorRef" : "http://foo.com/v1.1/1",
       "hostId" : "e4d909c290d0fb1ca068ffaddf22cbd0",
       "status" : "BUILD",
       "progress" : 60,
       "addresses" : {
           "public" : [
-               "67.23.10.132",
-               "67.23.10.131"
+              { "version" : 4, "addr" : "67.23.10.132" },
+              { "version" : 4, "addr" : "67.23.10.131" }
           ],
           "private" : [
-               "10.176.42.16"
+              { "version" : 4, "addr" : "10.176.42.16" }
           ]
       },
       "metadata" : {
