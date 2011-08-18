@@ -1,0 +1,72 @@
+= Ruby OpenStack Compute
+
+== Description
+
+Ruby Openstack Compute binding.
+
+== Examples
+
+See the class definitions for documentation on specific methods and operations.
+
+  require 'openstack/compute'
+
+  cs = OpenStack::Compute::Connection.new(:username => USERNAME, :api_key => API_KEY, :api_url => API_URL)	
+
+  # Get a listing of all current servers
+  >> cs.servers
+  => [{:name=>"RenamedRubyTest", :id=>110917}]
+
+  # Access a specific server
+  >> server = cs.server(110917)
+  >> server.name
+  => "RenamedRubyTest"
+
+  # or...
+  server_manager.find(110917)
+  
+
+  # See what type of server this is
+  >> server.flavor.name
+  => "256 server"
+  >> server.image.name
+  => "Ubuntu 8.04.2 LTS (hardy)"
+
+  # Soft-reboot the server
+  >> server.reboot
+  => true
+
+  # Create a new 512MB CentOS 5.2 server.  The root password is returned in the adminPass method.
+  >> image = cs.get_image(8)
+  => #<OpenStack::Compute::Image:0x1014a8060 ...>, status"ACTIVE"
+  >> image.name
+  => "CentOS 5.2"
+  >> flavor = cs.get_flavor(2)
+  => #<OpenStack::Compute::Flavor:0x101469130 @disk=20, @name="512 server", @id=2, @ram=512>
+  >> flavor.name
+  => "512 server"
+  >> newserver = cs.create_server(:name => "New Server", :imageId => image.id, :flavorId => flavor.id)
+  => #<OpenStack::Compute::Server:0x101433f08 ....
+  >> newserver.status
+  => "BUILD"
+  >> newserver.progress
+  => 0
+  >> newserver.adminPass
+  => "NewServerMbhzUnO"
+  >> newserver.refresh
+  => true
+  >> newserver.progress
+  => 12
+  
+  # Delete the new server
+  >> newserver.delete!
+  => true  
+
+== Authors
+
+By Dan Prince <dan.prince@rackspace.com>, Naveed Massjouni <naveedm9@gmail.com>
+
+Based on the Rackspace Cloud Servers Ruby API.
+
+== License
+
+See COPYING for license information.
