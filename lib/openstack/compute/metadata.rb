@@ -10,12 +10,12 @@ module Compute
 
     def get_item(key)
       response = @connection.req('GET', "#{@base_url}/#{key}")
-      return JSON.parse(response.body)[key]
+      return JSON.parse(response.body)['meta'][key]
     end
 
     def set_item(key, value)
-      json = JSON.generate(key => value)
-      @connection.req('PUT', "#{@base_url}/#{key}",:data => json)
+      json = JSON.generate(:meta => { key => value })
+      @connection.req('PUT', "#{@base_url}/#{key}", :data => json)
     end
 
     def delete_item(key)
@@ -37,14 +37,14 @@ module Compute
   class ServerMetadata < AbstractMetadata
     def initialize(connection, server_id)
       super(connection, server_id)
-      @base_url = "/servers/#{@server_id}/meta"
+      @base_url = "/servers/#{@server_id}/metadata"
     end
   end
 
   class ImageMetadata < AbstractMetadata
     def initialize(connection, server_id)
       super(connection, server_id)
-      @base_url = "/images/#{@server_id}/meta"
+      @base_url = "/images/#{@server_id}/metadata"
     end
   end
 

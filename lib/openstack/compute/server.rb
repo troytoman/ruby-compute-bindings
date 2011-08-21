@@ -10,8 +10,9 @@ module Compute
     attr_reader   :progress
     attr_reader   :addresses
     attr_reader   :hostId
-    attr_reader   :imageRef
-    attr_reader   :flavorRef
+    attr_reader   :imageId
+    attr_reader   :flavorId
+    attr_reader   :metadata
     attr_accessor :adminPass
     
     # This class is the representation of a single Server object.  The constructor finds the server identified by the specified
@@ -53,8 +54,8 @@ module Compute
       @addresses = OpenStack::Compute.symbolize_keys(data["addresses"])
       @metadata  = OpenStack::Compute::ServerMetadata.new(@connection, @id)
       @hostId    = data["hostId"]
-      @imageRef   = data["imageRef"]
-      @flavorRef  = data["flavorRef"]
+      @imageId   = data["image"]["id"]
+      @flavorId  = data["flavor"]["id"]
       true
     end
     alias :refresh :populate
@@ -66,7 +67,7 @@ module Compute
     #   >> flavor.name
     #   => "256 server"
     def flavor
-      OpenStack::Compute::Flavor.new(@connection, self.flavorRef)
+      OpenStack::Compute::Flavor.new(@connection, self.flavorId)
     end
     
     # Returns a new OpenStack::Compute::Image object for the image assigned to this server.
@@ -76,7 +77,7 @@ module Compute
     #   >> image.name
     #   => "Ubuntu 8.04.2 LTS (hardy)"
     def image
-      OpenStack::Compute::Image.new(@connection, self.imageRef)
+      OpenStack::Compute::Image.new(@connection, self.imageId)
     end
     
     # Sends an API request to reboot this server.  Takes an optional argument for the type of reboot, which can be "SOFT" (graceful shutdown)
@@ -143,7 +144,7 @@ module Compute
     #
     # This method expects a hash of the form:
     # {
-    #   :imageRef => "https://foo.com/v1.1/images/2",
+    #   :imageId => "https://foo.com/v1.1/images/2",
     #   :name => "newName",
     #   :metadata => { :values => { :foo : "bar" } },
     #   :personality => [
