@@ -107,7 +107,7 @@ module Compute
       path = @svrmgmtpath + path
       res = csreq(method,server,path,port,scheme,headers,data,attempts)
       if not res.code.match(/^20.$/)
-        OpenStack::Compute::Exception.raise_exception(response)
+        OpenStack::Compute::Exception.raise_exception(res)
       end
       return res
     end;
