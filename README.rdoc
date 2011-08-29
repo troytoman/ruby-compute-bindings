@@ -2,7 +2,9 @@
 
 == Description
 
-Ruby Openstack Compute binding.
+Ruby Openstack Compute binding for the v1.0 OSAPI.
+
+Currently supports both v1.0 and v2.0 (keystone) auth.
 
 == Examples
 
@@ -10,7 +12,7 @@ See the class definitions for documentation on specific methods and operations.
 
   require 'openstack/compute'
 
-  cs = OpenStack::Compute::Connection.new(:username => USERNAME, :api_key => API_KEY, :api_url => API_URL)	
+  cs = OpenStack::Compute::Connection.new(:username => USERNAME, :api_key => API_KEY, :auth_url => API_URL)	
 
   # Get a listing of all current servers
   >> cs.servers

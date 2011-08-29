@@ -9,7 +9,7 @@
 # To begin reviewing the available methods and examples, view the README.rdoc file, or begin by looking at documentation for the OpenStack::Compute::Connection class.
 #
 # Example:
-# OpenStack::Compute::Connection.new(:username => USERNAME, :api_key => API_KEY, :api_url => API_URL) method.
+# OpenStack::Compute::Connection.new(:username => USERNAME, :api_key => API_KEY, :auth_url => API_URL) method.
 module OpenStack
 module Compute
 

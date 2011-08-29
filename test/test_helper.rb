@@ -16,7 +16,7 @@ def get_test_connection
     #server.stubs(:get).returns(conn_response)
     Net::HTTP.stubs(:new).returns(server)
 
-    OpenStack::Compute::Connection.new(:username => "test_account", :api_key => "AABBCCDD11", :api_url => "http://a.b.c")
+    OpenStack::Compute::Connection.new(:username => "test_account", :api_key => "AABBCCDD11", :auth_url => "http://a.b.c")
 
 end
 

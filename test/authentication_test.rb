@@ -8,9 +8,9 @@ class AuthenticationTest < Test::Unit::TestCase
     server = mock(:use_ssl= => true, :verify_mode= => true, :start => true, :finish => true)
     server.stubs(:get).returns(response)
     Net::HTTP.stubs(:new).returns(server)
-    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :api_host => "a.b.c", :api_port => "443", :api_scheme => "https", :authok= => true, :authtoken= => true, :svrmgmthost= => "", :svrmgmtpath= => "", :svrmgmtpath => "", :svrmgmtport= => "", :svrmgmtscheme= => "", :proxy_host => nil, :proxy_port => nil)
-    result = OpenStack::Compute::Authentication.new(connection)
-    assert_equal result.class, OpenStack::Compute::Authentication
+    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :auth_host => "a.b.c", :auth_port => "443", :auth_scheme => "https", :auth_path => "/v1.0", :authok= => true, :authtoken= => true, :svrmgmthost= => "", :svrmgmtpath= => "", :svrmgmtpath => "", :svrmgmtport= => "", :svrmgmtscheme= => "", :proxy_host => nil, :proxy_port => nil)
+    result = OpenStack::Compute::Authentication.init(connection)
+    assert_equal result.class, OpenStack::Compute::AuthV10
   end
   
   def test_bad_authentication
@@ -19,17 +19,17 @@ class AuthenticationTest < Test::Unit::TestCase
     server = mock(:use_ssl= => true, :verify_mode= => true, :start => true)
     server.stubs(:get).returns(response)
     Net::HTTP.stubs(:new).returns(server)
-    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :api_host => "a.b.c", :api_port => "443", :api_scheme => "https", :authok= => true, :authtoken= => true, :proxy_host => nil, :proxy_port => nil)
+    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :auth_host => "a.b.c", :auth_port => "443", :auth_scheme => "https", :auth_path => "/v1.0", :authok= => true, :authtoken= => true, :proxy_host => nil, :proxy_port => nil)
     assert_raises(OpenStack::Compute::Exception::Authentication) do
-      result = OpenStack::Compute::Authentication.new(connection)
+      result = OpenStack::Compute::Authentication.init(connection)
     end
   end
     
   def test_bad_hostname
     Net::HTTP.stubs(:new).raises(OpenStack::Compute::Exception::Connection)
-    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :api_host => "a.b.c", :api_port => "443", :api_scheme => "https", :authok= => true, :authtoken= => true, :proxy_host => nil, :proxy_port => nil)
+    connection = stub(:authuser => 'bad_user', :authkey => 'bad_key', :auth_host => "a.b.c", :auth_port => "443", :auth_scheme => "https", :auth_path => "/v1.0", :authok= => true, :authtoken= => true, :proxy_host => nil, :proxy_port => nil)
     assert_raises(OpenStack::Compute::Exception::Connection) do
-      result = OpenStack::Compute::Authentication.new(connection)
+      result = OpenStack::Compute::Authentication.init(connection)
     end
   end
     
