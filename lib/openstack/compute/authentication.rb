@@ -42,7 +42,7 @@ module Compute
           connection.svrmgmthost = uri.host
           connection.svrmgmtpath = uri.path
           # Force the path into the v1.0 URL space
-          connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.0/')
+          connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
           connection.svrmgmtport = uri.port
           connection.svrmgmtscheme = uri.scheme
           connection.authok = true
@@ -60,7 +60,6 @@ module Compute
   class AuthV10
     
     def initialize(connection)
-      path = connection.api_path
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)
@@ -72,14 +71,14 @@ module Compute
       rescue
         raise OpenStack::Compute::Exception::Connection, "Unable to connect to #{server}"
       end
-      response = server.get(path,hdrhash)
+      response = server.get(connection.auth_path, hdrhash)
       if (response.code =~ /^20./)
         connection.authtoken = response["x-auth-token"]
         uri = URI.parse(response["x-server-management-url"])
         connection.svrmgmthost = uri.host
         connection.svrmgmtpath = uri.path
         # Force the path into the v1.0 URL space
-        connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.0/')
+        connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
         connection.svrmgmtport = uri.port
         connection.svrmgmtscheme = uri.scheme
         connection.authok = true
