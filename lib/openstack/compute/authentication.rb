@@ -8,7 +8,7 @@ module Compute
     # svrmgmtscheme, authtoken, and authok variables on the connection.
     # If it fails, it raises an exception.
     def self.init(conn)
-      if conn.auth_path =~ /.*v2.0\/tokens$/
+      if conn.auth_path =~ /.*v2.0\/?$/
         AuthV20.new(conn)
       else
         AuthV10.new(conn)
@@ -33,7 +33,7 @@ module Compute
       end
 
       auth_data = JSON.generate({ "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }})
-      response = server.post(connection.auth_path, auth_data, {'Content-Type' => 'application/json'})
+      response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
       if (response.code =~ /^20./)
         resp_data=JSON.parse(response.body)
         connection.authtoken = resp_data['auth']['token']['id']
