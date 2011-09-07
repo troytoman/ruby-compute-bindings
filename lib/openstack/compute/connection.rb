@@ -3,6 +3,7 @@ module Compute
   class Connection
     
     attr_reader   :authuser
+    attr_reader   :authtenant
     attr_reader   :authkey
     attr_accessor :authtoken
     attr_accessor :authok
@@ -23,6 +24,7 @@ module Compute
     # The constructor takes a hash of options, including:
     #
     #   :username - Your Openstack username *required*
+    #   :tenant - Your Openstack tenant *required*. Defaults to username.
     #   :api_key - Your Openstack API key *required*
     #   :auth_url - Configurable auth_url endpoint.
     #   :service_name - (Optional for v2.0 auth only). The name of the compute service to use. Defaults to 'nova'.
@@ -30,11 +32,12 @@ module Compute
     #   :proxy_host - If you need to connect through a proxy, supply the hostname here
     #   :proxy_port - If you need to connect through a proxy, supply the port here
     #
-    #   cf = OpenStack::Compute::Connection.new(:username => 'USERNAME', :api_key => 'API_KEY', :auth_url => 'AUTH_URL')
+    #   cs = OpenStack::Compute::Connection.new(:username => 'USERNAME', :api_key => 'API_KEY', :auth_url => 'AUTH_URL')
     def initialize(options = {:retry_auth => true}) 
       @authuser = options[:username] || (raise Exception::MissingArgument, "Must supply a :username")
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @auth_url = options[:auth_url] || (raise Exception::MissingArgument, "Must supply an :auth_url")
+      @authtenant = options[:authtenant] || @authuser
       @service_name = options[:service_name] || "nova"
       @is_debug = options[:is_debug]
 

@@ -43,6 +43,7 @@ module Compute
           connection.svrmgmtpath = uri.path
           # Force the path into the v1.0 URL space
           connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
+          connection.svrmgmtpath += connection.authtenant
           connection.svrmgmtport = uri.port
           connection.svrmgmtscheme = uri.scheme
           connection.authok = true
@@ -79,6 +80,7 @@ module Compute
         connection.svrmgmtpath = uri.path
         # Force the path into the v1.0 URL space
         connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
+        connection.svrmgmtpath += connection.authtenant
         connection.svrmgmtport = uri.port
         connection.svrmgmtscheme = uri.scheme
         connection.authok = true
