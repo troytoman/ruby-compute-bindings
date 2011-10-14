@@ -52,7 +52,6 @@ module Compute
       @auth_port = auth_uri.port
       @auth_scheme = auth_uri.scheme
       @auth_path = auth_uri.path
-
       @retry_auth = options[:retry_auth]
       @proxy_host = options[:proxy_host]
       @proxy_port = options[:proxy_port]
