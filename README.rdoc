@@ -46,7 +46,7 @@ See the class definitions for documentation on specific methods and operations.
   => #<OpenStack::Compute::Flavor:0x101469130 @disk=20, @name="512 server", @id=2, @ram=512>
   >> flavor.name
   => "512 server"
-  >> newserver = cs.create_server(:name => "New Server", :imageId => image.id, :flavorId => flavor.id)
+  >> newserver = cs.create_server(:name => "New Server", :imageRef => image.id, :flavorRef => flavor.id)
   => #<OpenStack::Compute::Server:0x101433f08 ....
   >> newserver.status
   => "BUILD"

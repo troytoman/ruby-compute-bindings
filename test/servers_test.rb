@@ -71,8 +71,8 @@ class ServersTest < Test::Unit::TestCase
 
     server=get_test_server
     assert_equal "sample-server", server.name
-    assert_equal "2", server.imageId
-    assert_equal "1", server.flavorId
+    assert_equal "2", server.image['id']
+    assert_equal "1", server.flavor['id']
     assert_equal "e4d909c290d0fb1ca068ffaddf22cbd0", server.hostId
     assert_equal "BUILD", server.status
     assert_equal 60, server.progress

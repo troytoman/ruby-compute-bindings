@@ -150,11 +150,11 @@ module Compute
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #   >> cs.list_servers_detail
-    #   => [{:name=>"MyServer", :addresses=>{:public=>["67.23.42.37"], :private=>["10.176.241.237"]}, :metadata=>{"MyData" => "Valid"}, :imageId=>10, :progress=>100, :hostId=>"36143b12e9e48998c2aef79b50e144d2", :flavorId=>1, :id=>110917, :status=>"ACTIVE"}]
+    #   => [{:name=>"MyServer", :addresses=>{:public=>["67.23.42.37"], :private=>["10.176.241.237"]}, :metadata=>{"MyData" => "Valid"}, :imageRef=>10, :progress=>100, :hostId=>"36143b12e9e48998c2aef79b50e144d2", :flavorRef=>1, :id=>110917, :status=>"ACTIVE"}]
     #
     #   >> cs.list_servers_detail(:limit => 2, :offset => 3)
-    #   => [{:status=>"ACTIVE", :imageId=>10, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-standingcloud-lts", :id=>168867, :flavorId=>1, :hostId=>"xxxxxx"}, 
-    #       {:status=>"ACTIVE", :imageId=>8, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-aicache1", :id=>187853, :flavorId=>3, :hostId=>"xxxxxx"}]
+    #   => [{:status=>"ACTIVE", :imageRef=>10, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-standingcloud-lts", :id=>168867, :flavorRef=>1, :hostId=>"xxxxxx"}, 
+    #       {:status=>"ACTIVE", :imageRef=>8, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-aicache1", :id=>187853, :flavorRef=>3, :hostId=>"xxxxxx"}]
     def list_servers_detail(options = {})
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
@@ -211,7 +211,7 @@ module Compute
     end
     
     # Returns an array of hashes listing available server images that you have access too, including stock OpenStack Compute images and 
-    # any that you have created.  The "id" key in the hash can be used where imageId is required.
+    # any that you have created.  The "id" key in the hash can be used where imageRef is required.
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #
@@ -240,7 +240,7 @@ module Compute
     end
     alias :image :get_image
     
-    # Returns an array of hashes listing all available server flavors.  The :id key in the hash can be used when flavorId is required.
+    # Returns an array of hashes listing all available server flavors.  The :id key in the hash can be used when flavorRef is required.
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #
