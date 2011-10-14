@@ -2,13 +2,18 @@ module OpenStack
 module Compute
   class Image
 
+    require 'compute/metadata'
+
     attr_reader :id
     attr_reader :name
-    attr_reader :serverId
+    attr_reader :server
     attr_reader :updated
     attr_reader :created
     attr_reader :status
+    attr_reader :minDisk
+    attr_reader :minRam
     attr_reader :progress
+    attr_reader :metadata
     
     # This class provides an object for the "Image" of a server.  The Image refers to the Operating System type and version.
     #
@@ -23,6 +28,7 @@ module Compute
     def initialize(connection,id)
       @id = id
       @connection = connection
+      @metadata  = OpenStack::Compute::ImageMetadata.new(connection, id)
       populate
     end
     
@@ -37,12 +43,14 @@ module Compute
       data = JSON.parse(response.body)['image']
       @id = data['id']
       @name = data['name']
-      @serverId = data['serverId']
+      @server = data['server']
       if data['updated'] then
          @updated = DateTime.parse(data['updated'])
       end
       @created = DateTime.parse(data['created'])
       @status = data['status']
+      @minDisk = data['minDisk']
+      @minRam = data['minRam']
       @progress = data['progress']
       return true
     end

@@ -3,6 +3,7 @@ module Compute
   class Connection
     
     attr_reader   :authuser
+    attr_reader   :authtenant
     attr_reader   :authkey
     attr_accessor :authtoken
     attr_accessor :authok
@@ -23,6 +24,7 @@ module Compute
     # The constructor takes a hash of options, including:
     #
     #   :username - Your Openstack username *required*
+    #   :tenant - Your Openstack tenant *required*. Defaults to username.
     #   :api_key - Your Openstack API key *required*
     #   :auth_url - Configurable auth_url endpoint.
     #   :service_name - (Optional for v2.0 auth only). The name of the compute service to use. Defaults to 'nova'.
@@ -30,12 +32,14 @@ module Compute
     #   :proxy_host - If you need to connect through a proxy, supply the hostname here
     #   :proxy_port - If you need to connect through a proxy, supply the port here
     #
-    #   cf = OpenStack::Compute::Connection.new(:username => 'USERNAME', :api_key => 'API_KEY', :auth_url => 'AUTH_URL')
+    #   cs = OpenStack::Compute::Connection.new(:username => 'USERNAME', :api_key => 'API_KEY', :auth_url => 'AUTH_URL')
     def initialize(options = {:retry_auth => true}) 
       @authuser = options[:username] || (raise Exception::MissingArgument, "Must supply a :username")
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @auth_url = options[:auth_url] || (raise Exception::MissingArgument, "Must supply an :auth_url")
+      @authtenant = options[:authtenant] || @authuser
       @service_name = options[:service_name] || "nova"
+      @is_debug = options[:is_debug]
 
       auth_uri=nil
       begin
@@ -48,7 +52,6 @@ module Compute
       @auth_port = auth_uri.port
       @auth_scheme = auth_uri.scheme
       @auth_path = auth_uri.path
-
       @retry_auth = options[:retry_auth]
       @proxy_host = options[:proxy_host]
       @proxy_port = options[:proxy_port]
@@ -64,7 +67,7 @@ module Compute
     def authok?
       @authok
     end
-    
+
     # This method actually makes the HTTP REST calls out to the server
     def csreq(method,server,path,port,scheme,headers = {},data = nil,attempts = 0) # :nodoc:
       start = Time.now
@@ -73,6 +76,12 @@ module Compute
       request = Net::HTTP.const_get(method.to_s.capitalize).new(path,hdrhash)
       request.body = data
       response = @http[server].request(request)
+      if @is_debug
+          puts "REQUEST: #{method} => #{path}"
+          puts data if data
+          puts "RESPONSE: #{response.body}"
+          puts '----------------------------------------'
+      end
       raise OpenStack::Compute::Exception::ExpiredAuthToken if response.code == "401"
       response
     rescue Errno::EPIPE, Timeout::Error, Errno::EINVAL, EOFError
@@ -87,7 +96,24 @@ module Compute
       OpenStack::Compute::Authentication.init(self)
       retry
     end
-    
+
+    # This is a much more sane way to make a http request to the api.
+    # Example: res = conn.req('GET', "/servers/#{id}")
+    def req(method, path, options = {})
+      server   = options[:server]   || @svrmgmthost
+      port     = options[:port]     || @svrmgmtport
+      scheme   = options[:scheme]   || @svrmgmtscheme
+      headers  = options[:headers]  || {'content-type' => 'application/json'}
+      data     = options[:data]
+      attempts = options[:attempts] || 0
+      path = @svrmgmtpath + path
+      res = csreq(method,server,path,port,scheme,headers,data,attempts)
+      if not res.code.match(/^20.$/)
+        OpenStack::Compute::Exception.raise_exception(res)
+      end
+      return res
+    end;
+
     # Returns the OpenStack::Compute::Server object identified by the given id.
     #
     #   >> server = cs.get_server(110917)
@@ -124,11 +150,11 @@ module Compute
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #   >> cs.list_servers_detail
-    #   => [{:name=>"MyServer", :addresses=>{:public=>["67.23.42.37"], :private=>["10.176.241.237"]}, :metadata=>{"MyData" => "Valid"}, :imageId=>10, :progress=>100, :hostId=>"36143b12e9e48998c2aef79b50e144d2", :flavorId=>1, :id=>110917, :status=>"ACTIVE"}]
+    #   => [{:name=>"MyServer", :addresses=>{:public=>["67.23.42.37"], :private=>["10.176.241.237"]}, :metadata=>{"MyData" => "Valid"}, :imageRef=>10, :progress=>100, :hostId=>"36143b12e9e48998c2aef79b50e144d2", :flavorRef=>1, :id=>110917, :status=>"ACTIVE"}]
     #
     #   >> cs.list_servers_detail(:limit => 2, :offset => 3)
-    #   => [{:status=>"ACTIVE", :imageId=>10, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-standingcloud-lts", :id=>168867, :flavorId=>1, :hostId=>"xxxxxx"}, 
-    #       {:status=>"ACTIVE", :imageId=>8, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-aicache1", :id=>187853, :flavorId=>3, :hostId=>"xxxxxx"}]
+    #   => [{:status=>"ACTIVE", :imageRef=>10, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-standingcloud-lts", :id=>168867, :flavorRef=>1, :hostId=>"xxxxxx"}, 
+    #       {:status=>"ACTIVE", :imageRef=>8, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-aicache1", :id=>187853, :flavorRef=>3, :hostId=>"xxxxxx"}]
     def list_servers_detail(options = {})
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
@@ -139,21 +165,32 @@ module Compute
     
     # Creates a new server instance on OpenStack Compute
     # 
-    # The argument is a hash of options.  The keys :name, :flavorId, and :imageId are required, :metadata and :personality are optional.
+    # The argument is a hash of options.  The keys :name, :flavorRef,
+    # and :imageRef are required; :metadata and :personality are optional.
     #
-    # :flavorId and :imageId are numbers identifying a particular server flavor and image to use when building the server.  The :imageId can either
-    # be a stock image, or one of your own created with the server.create_image method.
+    # :flavorRef and :imageRef are href strings identifying a particular
+    # server flavor and image to use when building the server.  The :imageRef
+    # can either be a stock image, or one of your own created with the
+    # server.create_image method.
     #
-    # The :metadata argument will take a hash of up to five key/value pairs.  This metadata will be applied to the server at the OpenStack Compute
-    # API level.
+    # The :metadata argument should be a hash of key/value pairs.  This
+    # metadata will be applied to the server at the OpenStack Compute API level.
     #
-    # The "Personality" option allows you to include up to five files, of 10Kb or less in size, that will be placed on the created server.
-    # For :personality, pass a hash of the form {'local_path' => 'server_path'}.  The file located at local_path will be base64-encoded
-    # and placed at the location identified by server_path on the new server.
+    # The "Personality" option allows you to include up to five files, # of
+    # 10Kb or less in size, that will be placed on the created server.
+    # For :personality, pass a hash of the form {'local_path' => 'server_path'}.
+    # The file located at local_path will be base64-encoded and placed at the
+    # location identified by server_path on the new server.
     #
-    # Returns a OpenStack::Compute::Server object.  The root password is available in the adminPass instance method.
+    # Returns a OpenStack::Compute::Server object.  The root password is
+    # available in the adminPass instance method.
     #
-    #   >> server = cs.create_server(:name => "New Server", :imageId => 2, :flavorId => 2, :metadata => {'Racker' => 'Fanatical'}, :personality => {'/Users/me/Pictures/wedding.jpg' => '/root/me.jpg'})
+    #   >> server = cs.create_server(
+    #        :name        => 'NewServer',
+    #        :imageRef    => 'http://172.19.0.3/v1.1/images/3',
+    #        :flavorRef   => 'http://172.19.0.3/v1.1/flavors/1',
+    #        :metadata    => {'Racker' => 'Fanatical'},
+    #        :personality => {'/home/bob/wedding.jpg' => '/root/wedding.jpg'})
     #   => #<OpenStack::Compute::Server:0x101229eb0 ...>
     #   >> server.name
     #   => "NewServer"
@@ -162,9 +199,8 @@ module Compute
     #   >> server.adminPass
     #   => "NewServerSHMGpvI"
     def create_server(options)
-      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavor ID, and image ID must be supplied" unless (options[:name] && options[:flavorId] && options[:imageId])
+      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavorRef, and imageRef, must be supplied" unless (options[:name] && options[:flavorRef] && options[:imageRef])
       options[:personality] = get_personality(options[:personality])
-      raise TooManyMetadataItems, "Metadata is limited to a total of #{MAX_PERSONALITY_METADATA_ITEMS} key/value pairs" if options[:metadata].is_a?(Hash) && options[:metadata].keys.size > MAX_PERSONALITY_METADATA_ITEMS
       data = JSON.generate(:server => options)
       response = csreq("POST",svrmgmthost,"#{svrmgmtpath}/servers",svrmgmtport,svrmgmtscheme,{'content-type' => 'application/json'},data)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
@@ -175,7 +211,7 @@ module Compute
     end
     
     # Returns an array of hashes listing available server images that you have access too, including stock OpenStack Compute images and 
-    # any that you have created.  The "id" key in the hash can be used where imageId is required.
+    # any that you have created.  The "id" key in the hash can be used where imageRef is required.
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #
@@ -204,7 +240,7 @@ module Compute
     end
     alias :image :get_image
     
-    # Returns an array of hashes listing all available server flavors.  The :id key in the hash can be used when flavorId is required.
+    # Returns an array of hashes listing all available server flavors.  The :id key in the hash can be used when flavorRef is required.
     #
     # You can also provide :limit and :offset parameters to handle pagination.
     #
