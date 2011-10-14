@@ -161,10 +161,11 @@ module Compute
     #   >> image = server.create_image("My Rails Server")
     #   => 
     def create_image(name)
-      data = JSON.generate(:image => {:serverId => self.id, :name => name})
-      response = @connection.csreq("POST",@svrmgmthost,"#{@svrmgmtpath}/images",@svrmgmtport,@svrmgmtscheme,{'content-type' => 'application/json'},data)
+      data = JSON.generate(:createImage => {:name => name})
+      response = @connection.csreq("POST",@svrmgmthost,"#{@svrmgmtpath}/servers/#{URI.encode(self.id.to_s)}/action",@svrmgmtport,@svrmgmtscheme,{'content-type' => 'application/json'},data)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
-      OpenStack::Compute::Image.new(@connection,JSON.parse(response.body)['image']['id'])
+      image_id = response["Location"].scan(/.*\/(.*)/).flatten
+      OpenStack::Compute::Image.new(@connection, image_id)
     end
     
     # Resizes the server to the size contained in the server flavor found at ID flavorRef.  The server name, ID number, and IP addresses 
