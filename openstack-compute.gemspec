@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.name = %q{openstack-compute}
   s.version = "1.1.0"
 
-  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Dan Prince"]
-  s.date = %q{2011-10-13}
+  s.date = %q{2011-10-14}
   s.description = %q{API Binding for OpenStack Compute}
   s.email = %q{dan.prince@rackspace.com}
   s.extra_rdoc_files = [
@@ -32,14 +32,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{OpenStack Compute Ruby API}
-  s.test_files = [
-    "test/authentication_test.rb",
-     "test/exception_test.rb",
-     "test/test_helper.rb",
-     "test/metadata_test.rb",
-     "test/connection_test.rb",
-     "test/servers_test.rb"
-  ]
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
