@@ -18,6 +18,7 @@ module Compute
     attr_accessor :service_name
     attr_reader   :proxy_host
     attr_reader   :proxy_port
+    attr_reader   :region
     
     # Creates a new OpenStack::Compute::Connection object.  Uses OpenStack::Compute::Authentication to perform the login for the connection.
     #
@@ -27,7 +28,8 @@ module Compute
     #   :tenant - Your Openstack tenant *required*. Defaults to username.
     #   :api_key - Your Openstack API key *required*
     #   :auth_url - Configurable auth_url endpoint.
-    #   :service_name - (Optional for v2.0 auth only). The name of the compute service to use. Defaults to 'nova'.
+    #   :service_name - (Optional for v2.0 auth only). The name of the compute service to use. Defaults to 'compute'.
+    #   :region - (Optional for v2.0 auth only). The specific service region to use. Defaults to first returned region.
     #   :retry_auth - Whether to retry if your auth token expires (defaults to true)
     #   :proxy_host - If you need to connect through a proxy, supply the hostname here
     #   :proxy_port - If you need to connect through a proxy, supply the port here
@@ -38,7 +40,8 @@ module Compute
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @auth_url = options[:auth_url] || (raise Exception::MissingArgument, "Must supply an :auth_url")
       @authtenant = options[:authtenant] || @authuser
-      @service_name = options[:service_name] || "nova"
+      @service_name = options[:service_name] || "compute"
+      @region = options[:region] || @region = nil
       @is_debug = options[:is_debug]
 
       auth_uri=nil
@@ -341,7 +344,7 @@ module Compute
         data.push({:path => svrpath, :contents => b64})
         itemcount += 1
       end
-      return data
+      data
     end
         
   end

@@ -8,6 +8,8 @@ module Compute
     attr_reader   :name
     attr_reader   :status
     attr_reader   :progress
+    attr_reader   :accessipv4
+    attr_reader   :accessipv6
     attr_reader   :addresses
     attr_reader   :hostId
     attr_reader   :image
@@ -51,7 +53,7 @@ module Compute
       @name      = data["name"]
       @status    = data["status"]
       @progress  = data["progress"]
-      @addresses = OpenStack::Compute.symbolize_keys(data["addresses"])
+      @addresses = get_addresses(data["addresses"])
       @metadata  = OpenStack::Compute::ServerMetadata.new(@connection, @id)
       @hostId    = data["hostId"]
       @image   = data["image"]
@@ -220,6 +222,19 @@ module Compute
       json = JSON.generate(:changePassword => { :adminPass => password })
       @connection.req('POST', "/servers/#{@id}/action", :data => json)
       @adminPass = password
+    end
+
+    def get_addresses(address_info)
+      address_list = OpenStack::Compute::AddressList.new
+      address_info.each do |label, addr|
+        addr.each do |address|
+          address_list << OpenStack::Compute::Address.new(label,address)
+          if address_list.last.version == 4 && (!@accessipv4 || accessipv4 == "") then
+            @accessipv4 = address_list.last.address
+          end
+        end
+      end
+      address_list
     end
 
   end

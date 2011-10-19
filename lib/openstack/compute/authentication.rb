@@ -32,23 +32,37 @@ module Compute
         raise OpenStack::Compute::Exception::Connection, "Unable to connect to #{server}"
       end
 
-      auth_data = JSON.generate({ "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }})
+      auth_data = JSON.generate({ "auth" =>  { "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }}})
       response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
       if (response.code =~ /^20./)
         resp_data=JSON.parse(response.body)
-        connection.authtoken = resp_data['auth']['token']['id']
-        if resp_data['auth']['serviceCatalog'] and resp_data['auth']['serviceCatalog'][connection.service_name] and resp_data['auth']['serviceCatalog'][connection.service_name][0] then
-          uri = URI.parse(resp_data['auth']['serviceCatalog'][connection.service_name][0]['publicURL'])
-          connection.svrmgmthost = uri.host
-          connection.svrmgmtpath = uri.path
-          # Force the path into the v1.1 URL space
-          connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
-          connection.svrmgmtpath += connection.authtenant
-          connection.svrmgmtport = uri.port
-          connection.svrmgmtscheme = uri.scheme
-          connection.authok = true
-        else
-          connection.authok = false
+        connection.authtoken = resp_data['access']['token']['id']
+        resp_data['access']['serviceCatalog'].each do |service|
+          if service['type'] == connection.service_name
+            uri = String.new
+            endpoints = service["endpoints"]
+            if connection.region
+              endpoints.each do |ep|
+                puts "ENDPOINT: " + ep.inspect
+                if ep["region"].upcase == connection.region.upcase
+                  uri = URI.parse(ep["publicURL"])
+                  puts uri
+                end
+              end
+              if uri == ''
+                raise OpenStack::Compute::Exception::Authentication, "No API endpoint for region #{connection.region}"
+              end
+            else
+              uri = URI.parse(endpoints[0]["publicURL"])
+            end
+            connection.svrmgmthost = uri.host
+            connection.svrmgmtpath = uri.path
+            connection.svrmgmtport = uri.port
+            connection.svrmgmtscheme = uri.scheme
+            connection.authok = true
+          else
+            connection.authok = false
+          end
         end
       else
         connection.authtoken = false

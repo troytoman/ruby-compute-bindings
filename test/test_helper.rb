@@ -1,8 +1,9 @@
+require 'rubygems'
+gem 'test-unit'
 require 'test/unit'
+require 'mocha'
 $:.unshift File.dirname(__FILE__) + '/../lib'
 require 'openstack/compute'
-require 'rubygems'
-require 'mocha'
 
 module TestConnection
 

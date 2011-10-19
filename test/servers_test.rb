@@ -76,9 +76,9 @@ class ServersTest < Test::Unit::TestCase
     assert_equal "e4d909c290d0fb1ca068ffaddf22cbd0", server.hostId
     assert_equal "BUILD", server.status
     assert_equal 60, server.progress
-    assert_equal "67.23.10.132", server.addresses[:public][0][:addr]
-    assert_equal "67.23.10.131", server.addresses[:public][1][:addr]
-    assert_equal "10.176.42.16", server.addresses[:private][0][:addr]
+    assert_equal "67.23.10.132", server.addresses[:public][0]
+    assert_equal "67.23.10.131", server.addresses[:public][1]
+    assert_equal "10.176.42.16", server.addresses[:private][0]
 
   end
 
