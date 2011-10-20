@@ -43,10 +43,8 @@ module Compute
             endpoints = service["endpoints"]
             if connection.region
               endpoints.each do |ep|
-                puts "ENDPOINT: " + ep.inspect
                 if ep["region"].upcase == connection.region.upcase
                   uri = URI.parse(ep["publicURL"])
-                  puts uri
                 end
               end
               if uri == ''
