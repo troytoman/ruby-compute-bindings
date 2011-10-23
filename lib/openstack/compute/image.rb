@@ -14,6 +14,7 @@ module Compute
     attr_reader :minRam
     attr_reader :progress
     attr_reader :metadata
+    attr_reader :uri
     
     # This class provides an object for the "Image" of a server.  The Image refers to the Operating System type and version.
     #
@@ -52,6 +53,9 @@ module Compute
       @minDisk = data['minDisk']
       @minRam = data['minRam']
       @progress = data['progress']
+      if data['links'] then
+        @uri = data['links'].first['href']
+      end
       return true
     end
     alias :refresh :populate

@@ -35,7 +35,7 @@ module Compute
     #   :proxy_port - If you need to connect through a proxy, supply the port here
     #
     #   cs = OpenStack::Compute::Connection.new(:username => 'USERNAME', :api_key => 'API_KEY', :auth_url => 'AUTH_URL')
-    def initialize(options = {:retry_auth => true}) 
+    def initialize(options = {:retry_auth => true})
       @authuser = options[:username] || (raise Exception::MissingArgument, "Must supply a :username")
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @auth_url = options[:auth_url] || (raise Exception::MissingArgument, "Must supply an :auth_url")
