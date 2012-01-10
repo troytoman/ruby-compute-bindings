@@ -159,7 +159,9 @@ module Compute
     #   => [{:status=>"ACTIVE", :imageRef=>10, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-standingcloud-lts", :id=>168867, :flavorRef=>1, :hostId=>"xxxxxx"}, 
     #       {:status=>"ACTIVE", :imageRef=>8, :progress=>100, :metadata=>{}, :addresses=>{:public=>["x.x.x.x"], :private=>["x.x.x.x"]}, :name=>"demo-aicache1", :id=>187853, :flavorRef=>3, :hostId=>"xxxxxx"}]
     def list_servers_detail(options = {})
-      path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
+      anti_cache_param="cacheid=#{Time.now.to_i}"
+      path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail?#{anti_cache_param}" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
+      puts path
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
       OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
@@ -202,7 +204,7 @@ module Compute
     #   >> server.adminPass
     #   => "NewServerSHMGpvI"
     def create_server(options)
-      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavorRef, and imageRef, must be supplied" unless (options[:name] && options[:flavorRef] && options[:imageRef])
+      raise OpenStack::Compute::Exception::MissingArgument, "Server name, flavorRef, and imageRef, must be supplied" unless (options[:name] && (options[:flavorId] || options[:flavorRef]) && (options[:imageId]) || options[:imageRef])
       options[:personality] = get_personality(options[:personality])
       data = JSON.generate(:server => options)
       response = csreq("POST",svrmgmthost,"#{svrmgmtpath}/servers",svrmgmtport,svrmgmtscheme,{'content-type' => 'application/json'},data)

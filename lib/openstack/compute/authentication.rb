@@ -74,6 +74,7 @@ module Compute
     
     def initialize(connection)
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
+
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)
         if connection.auth_scheme == "https"
@@ -91,8 +92,8 @@ module Compute
         connection.svrmgmthost = uri.host
         connection.svrmgmtpath = uri.path
         # Force the path into the v1.1 URL space
-        connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
-        connection.svrmgmtpath += connection.authtenant
+        #connection.svrmgmtpath.sub!(/\/.*\/?/, '/v1.1/')
+        #connection.svrmgmtpath += connection.authtenant
         connection.svrmgmtport = uri.port
         connection.svrmgmtscheme = uri.scheme
         connection.authok = true

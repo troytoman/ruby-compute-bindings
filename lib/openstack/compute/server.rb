@@ -11,7 +11,7 @@ module Compute
     attr_reader   :accessipv4
     attr_reader   :accessipv6
     attr_reader   :addresses
-    attr_reader   :hostId
+    attr_accessor :hostId
     attr_reader   :image
     attr_reader   :flavor
     attr_reader   :metadata
