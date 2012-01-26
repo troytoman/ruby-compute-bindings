@@ -75,6 +75,7 @@ module Compute
     def csreq(method,server,path,port,scheme,headers = {},data = nil,attempts = 0) # :nodoc:
       start = Time.now
       hdrhash = headerprep(headers)
+      #puts "Server: " + server.inspect + " Path: " + path.inspect + " Port: " + port.inspect  + " Header: " + hdrhash.inspect
       start_http(server,path,port,scheme,hdrhash)
       request = Net::HTTP.const_get(method.to_s.capitalize).new(path,hdrhash)
       request.body = data
@@ -161,6 +162,7 @@ module Compute
     def list_servers_detail(options = {})
       anti_cache_param="cacheid=#{Time.now.to_i}"
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail?#{anti_cache_param}" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
+      puts "PATH: " + path
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
       OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
