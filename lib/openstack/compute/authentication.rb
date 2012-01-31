@@ -33,7 +33,7 @@ module Compute
         raise OpenStack::Compute::Exception::Connection, "Unable to connect to #{server}"
       end
 
-      if connection.auth_host.include? "identity.api.rackspacecloud.com"
+      if connection.auth_host.include? "api.rackspacecloud.com" and connection.auth_path.include? "2.0" and !connection.auth_host.include? "alpha"
         creds = "RAX-KSKEY:apiKeyCredentials"
         keyphrase = "apiKey"
       else
@@ -42,7 +42,7 @@ module Compute
       end
       auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
 
-      #puts "AUTH_DATA: " + auth_data
+      puts "AUTH_DATA: " + auth_data
 
       response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
 
@@ -50,13 +50,13 @@ module Compute
       if (response.code =~ /^20./)
         resp_data=JSON.parse(response.body)
 
-        #puts "RESPONSE BODY: " + resp_data['access']['serviceCatalog'].inspect
+        puts "RESPONSE BODY: " + resp_data['access']['serviceCatalog'].inspect
 
         connection.authtoken = resp_data['access']['token']['id']
         uri = String.new
         resp_data['access']['serviceCatalog'].each do |service|
 
-          #puts "SERVICE: " + service.inspect
+          puts "SERVICE: " + service.inspect
 
           if service['type'] == connection.service_name
             endpoints = service["endpoints"]
