@@ -232,6 +232,9 @@ module Compute
           if address_list.last.version == 4 && (!@accessipv4 || accessipv4 == "") then
             @accessipv4 = address_list.last.address
           end
+          if address_list.last.version == 6 && (!@accessipv6 || accessipv6 == "") then
+            @accessipv6 = address_list.last.address
+          end
         end
       end
       address_list
