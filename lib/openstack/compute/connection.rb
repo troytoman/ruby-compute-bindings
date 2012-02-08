@@ -16,6 +16,7 @@ module Compute
     attr_reader   :auth_scheme
     attr_reader   :auth_path
     attr_accessor :service_name
+    attr_accessor :service_type
     attr_reader   :proxy_host
     attr_reader   :proxy_port
     attr_reader   :region
@@ -40,7 +41,8 @@ module Compute
       @authkey = options[:api_key] || (raise Exception::MissingArgument, "Must supply an :api_key")
       @auth_url = options[:auth_url] || (raise Exception::MissingArgument, "Must supply an :auth_url")
       @authtenant = options[:authtenant] || @authuser
-      @service_name = options[:service_name] || "compute"
+      @service_name = options[:service_name] || nil
+      @service_type = options[:service_type] || "compute"
       @region = options[:region] || @region = nil
       @is_debug = options[:is_debug]
 

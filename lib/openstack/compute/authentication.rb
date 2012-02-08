@@ -40,7 +40,8 @@ module Compute
         creds = "passwordCredentials"
         keyphrase = "password"
       end
-      auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
+#      auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
+      auth_data = JSON.generate({ "auth" =>  { "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }, "tenantName" => connection.authtenant}})
 
       puts "AUTH_DATA: " + auth_data
 
@@ -58,7 +59,7 @@ module Compute
 
           puts "SERVICE: " + service.inspect
 
-          if service['type'] == connection.service_name
+          if service['type'] == connection.service_type and service['name'] and service['name'] == connection.service_name
             endpoints = service["endpoints"]
             if connection.region
               endpoints.each do |ep|
@@ -83,6 +84,7 @@ module Compute
           connection.svrmgmtport = uri.port
           connection.svrmgmtscheme = uri.scheme
           connection.authok = true
+          puts connection.inspect
         end
       else
         connection.authtoken = false
@@ -96,7 +98,7 @@ module Compute
     
     def initialize(connection)
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
-
+      puts "AUTH1.0: " + connection.inspect
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)
         if connection.auth_scheme == "https"
