@@ -33,32 +33,25 @@ module Compute
         raise OpenStack::Compute::Exception::Connection, "Unable to connect to #{server}"
       end
 
-      if connection.auth_host.include? "api.rackspacecloud.com" and connection.auth_path.include? "2.0" and !connection.auth_host.include? "alpha"
-        creds = "RAX-KSKEY:apiKeyCredentials"
-        keyphrase = "apiKey"
-      else
+      creds = "RAX-KSKEY:apiKeyCredentials"
+      keyphrase = "apiKey"
+      auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
+      response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
+      puts auth_data.inspect
+      puts response.inspect
+      if (response.code =~ /^40./)
         creds = "passwordCredentials"
         keyphrase = "password"
+        auth_data = JSON.generate({ "auth" =>  { "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }, "tenantName" => connection.authtenant}})
+        puts auth_data.inspect
+        response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
       end
-#      auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
-      auth_data = JSON.generate({ "auth" =>  { "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }, "tenantName" => connection.authtenant}})
-
-      puts "AUTH_DATA: " + auth_data
-
-      response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
-
 
       if (response.code =~ /^20./)
         resp_data=JSON.parse(response.body)
-
-        puts "RESPONSE BODY: " + resp_data['access']['serviceCatalog'].inspect
-
         connection.authtoken = resp_data['access']['token']['id']
         uri = String.new
         resp_data['access']['serviceCatalog'].each do |service|
-
-          puts "SERVICE: " + service.inspect
-
           if service['type'] == connection.service_type and service['name'] and service['name'] == connection.service_name
             endpoints = service["endpoints"]
             if connection.region
@@ -84,7 +77,6 @@ module Compute
           connection.svrmgmtport = uri.port
           connection.svrmgmtscheme = uri.scheme
           connection.authok = true
-          puts connection.inspect
         end
       else
         connection.authtoken = false
@@ -98,7 +90,7 @@ module Compute
     
     def initialize(connection)
       hdrhash = { "X-Auth-User" => connection.authuser, "X-Auth-Key" => connection.authkey }
-      puts "AUTH1.0: " + connection.inspect
+      # puts "AUTH1.0: " + connection.inspect
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)
         if connection.auth_scheme == "https"

@@ -164,7 +164,6 @@ module Compute
     def list_servers_detail(options = {})
       anti_cache_param="cacheid=#{Time.now.to_i}"
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail?#{anti_cache_param}" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
-      puts "PATH: " + path
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
       OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
