@@ -37,13 +37,10 @@ module Compute
       keyphrase = "apiKey"
       auth_data = JSON.generate({ "auth" =>  { creds => { "username" => connection.authuser, keyphrase => connection.authkey }}})
       response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
-      puts auth_data.inspect
-      puts response.inspect
       if (response.code =~ /^40./)
         creds = "passwordCredentials"
         keyphrase = "password"
         auth_data = JSON.generate({ "auth" =>  { "passwordCredentials" => { "username" => connection.authuser, "password" => connection.authkey }, "tenantName" => connection.authtenant}})
-        puts auth_data.inspect
         response = server.post(connection.auth_path.chomp("/")+"/tokens", auth_data, {'Content-Type' => 'application/json'})
       end
 
