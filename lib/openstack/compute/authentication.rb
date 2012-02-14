@@ -20,7 +20,6 @@ module Compute
   private
   class AuthV20
     
-    # @param connection [Object]
     def initialize(connection)
       begin
         server = Net::HTTP::Proxy(connection.proxy_host, connection.proxy_port).new(connection.auth_host, connection.auth_port)
