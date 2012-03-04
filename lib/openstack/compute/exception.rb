@@ -71,6 +71,7 @@ module Compute
       begin
         fault = nil
         info = nil
+        puts "Response Code: " + response.code + " Repsonse Body: <begin>" + response.body + "<end>"
         JSON.parse(response.body).each_pair do |key, val|
 			fault=key
 			info=val
