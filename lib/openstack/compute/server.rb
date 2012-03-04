@@ -63,7 +63,7 @@ module Compute
         puts "Error in get_server response:"
         puts "Response code: " + response.code
         puts "Response body: " + response.body
-        put "Header information:"
+        puts "Header information:"
         response.each do |header_object|
           header_object.inspect
         end
