@@ -46,7 +46,7 @@ module Compute
     #  >> server.refresh
     #  => true
     def populate
-      reponse = nil 
+      response = nil 
       while !response
         begin
           response = @connection.csreq("GET",@svrmgmthost,"#{@svrmgmtpath}/servers/#{URI.encode(@id.to_s)}",@svrmgmtport,@svrmgmtscheme)
