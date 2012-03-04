@@ -7,7 +7,7 @@ module Compute
       attr_reader :response_body
       attr_reader :response_code
 
-      def initialize(message, code, response_body)
+      def initialize(message, code, response_body=nil)
         @response_code=code
         @response_body=response_body
         super(message)
