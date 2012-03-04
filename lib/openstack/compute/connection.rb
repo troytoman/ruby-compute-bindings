@@ -89,7 +89,7 @@ module Compute
           puts '----------------------------------------'
       end
       raise OpenStack::Compute::Exception::ExpiredAuthToken if response.code == "401"
-      raise OpenStack::Compute::Exception::OverLimit, "Limit or Quota Error", response.code, response.body if response.code == "413"
+      raise OpenStack::Compute::Exception::OverLimit, response.code, response.body if response.code == "413"
       response
     rescue Errno::EPIPE, Timeout::Error, Errno::EINVAL, EOFError
       # Server closed the connection, retry
