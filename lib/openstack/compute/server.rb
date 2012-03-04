@@ -48,16 +48,26 @@ module Compute
     def populate
       response = @connection.csreq("GET",@svrmgmthost,"#{@svrmgmtpath}/servers/#{URI.encode(@id.to_s)}",@svrmgmtport,@svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
-      data = JSON.parse(response.body)["server"]
-      @id        = data["id"]
-      @name      = data["name"]
-      @status    = data["status"]
-      @progress  = data["progress"]
-      @addresses = get_addresses(data["addresses"])
-      @metadata  = OpenStack::Compute::ServerMetadata.new(@connection, @id)
-      @hostId    = data["hostId"]
-      @image   = data["image"]
-      @flavor  = data["flavor"]
+      begin
+        data = JSON.parse(response.body)["server"]
+        @id        = data["id"]
+        @name      = data["name"]
+        @status    = data["status"]
+        @progress  = data["progress"]
+        @addresses = get_addresses(data["addresses"])
+        @metadata  = OpenStack::Compute::ServerMetadata.new(@connection, @id)
+        @hostId    = data["hostId"]
+        @image   = data["image"]
+        @flavor  = data["flavor"]
+      rescue
+        puts "Error in get_server response:"
+        puts "Response code: " + response.code
+        puts "Response body: " + response.body
+        put "Header information:"
+        response.each do |header_object|
+          header_object.inspect
+        end
+      end
       true
     end
     alias :refresh :populate
