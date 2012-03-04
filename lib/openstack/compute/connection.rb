@@ -146,7 +146,16 @@ module Compute
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers?#{anti_cache_param}" : "#{svrmgmtpath}/servers?#{OpenStack::Compute.paginate(options)}&#{anti_cache_param}"
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
-      OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
+      begin
+        OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
+      rescue Exception
+        if response.body
+          puts "Error in JSON: " + response.body.inspect
+          puts "RESPONSE: " + response.inspect
+        else
+          puts "Nothing returned in call."
+        end
+      end
     end
     alias :servers :list_servers
     
@@ -166,7 +175,16 @@ module Compute
       path = OpenStack::Compute.paginate(options).empty? ? "#{svrmgmtpath}/servers/detail?#{anti_cache_param}" : "#{svrmgmtpath}/servers/detail?#{OpenStack::Compute.paginate(options)}"
       response = csreq("GET",svrmgmthost,path,svrmgmtport,svrmgmtscheme)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
-      OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
+      begin
+        OpenStack::Compute.symbolize_keys(JSON.parse(response.body)["servers"])
+      rescue Exception
+        if response.body
+          puts "Error in JSON: " + response.body.inspect
+          puts "RESPONSE: " + response.inspect
+        else
+          puts "Nothing returned in call."
+        end
+      end
     end
     alias :servers_detail :list_servers_detail
     
