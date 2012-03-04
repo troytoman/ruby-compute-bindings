@@ -66,7 +66,7 @@ module Compute
       #  puts "Header information:"
       #  response.each do |header_object|
       #    header_object.inspect
-        end
+      #  end
       end
       true
     end
