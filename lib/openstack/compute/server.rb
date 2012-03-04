@@ -59,13 +59,13 @@ module Compute
         @hostId    = data["hostId"]
         @image   = data["image"]
         @flavor  = data["flavor"]
-      rescue
-        puts "Error in get_server response:"
-        puts "Response code: " + response.code
-        puts "Response body: " + response.body
-        puts "Header information:"
-        response.each do |header_object|
-          header_object.inspect
+      #rescue
+      #  puts "Error in get_server response:"
+      #  puts "Response code: " + response.code
+      #  puts "Response body: " + response.body
+      #  puts "Header information:"
+      #  response.each do |header_object|
+      #    header_object.inspect
         end
       end
       true
