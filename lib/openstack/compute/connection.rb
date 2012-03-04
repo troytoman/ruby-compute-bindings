@@ -91,6 +91,7 @@ module Compute
       raise OpenStack::Compute::Exception::ExpiredAuthToken if response.code == "401"
       if response.code == "413"
         raise OpenStack::Compute::Exception::OverLimit, "Rate Limit", response.code, response.body
+      end
       response
     rescue Errno::EPIPE, Timeout::Error, Errno::EINVAL, EOFError
       # Server closed the connection, retry
