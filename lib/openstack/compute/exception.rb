@@ -71,16 +71,16 @@ module Compute
       begin
         fault = nil
         info = nil
-        JSON.parse(response.body).each_pair do |key, val|
-			fault=key
-			info=val
-		end
+        if response.body
+          JSON.parse(response.body).each_pair do |key, val|
+	  		fault=key
+  		    info=val
+		  end
+        end
         exception_class = self.const_get(fault[0,1].capitalize+fault[1,fault.length])
         raise exception_class.new(info["message"], response.code, response.body)
       rescue NameError
         raise OpenStack::Compute::Exception::Other.new("The server returned status #{response.code}  #{response.body}", response.code, response.body)
-      rescue 
-        puts "Possible rate limit issue: Response Code: " + response.code
       end
     end
     
