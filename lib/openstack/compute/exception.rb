@@ -79,6 +79,8 @@ module Compute
         end
         exception_class = self.const_get(fault[0,1].capitalize+fault[1,fault.length])
         raise exception_class.new(info["message"], response.code, response.body)
+      rescue JSON::ParserError
+        raise exception_class.new("Problem parsing JSON response body: ", response.code, response.body) 
       rescue NameError
         raise OpenStack::Compute::Exception::Other.new("The server returned status #{response.code}  #{response.body}", response.code, response.body)
       end
