@@ -16,6 +16,7 @@ module Compute
     attr_reader   :flavor
     attr_reader   :metadata
     attr_accessor :adminPass
+    attr_accessor :create_reqid
     
     # This class is the representation of a single Server object.  The constructor finds the server identified by the specified
     # ID number, accesses the API via the populate method to get information about that server, and returns the object.
@@ -26,14 +27,18 @@ module Compute
     #   => #<OpenStack::Compute::Server:0x1014e5438 ....>
     #   >> server.name
     #   => "RenamedRubyTest"
-    def initialize(connection,id)
+    def initialize(connection,id,create_reqid=nil)
       @connection    = connection
       @id            = id
       @svrmgmthost   = connection.svrmgmthost
       @svrmgmtpath   = connection.svrmgmtpath
       @svrmgmtport   = connection.svrmgmtport
       @svrmgmtscheme = connection.svrmgmtscheme
-      populate
+      if create_reqid 
+        @create_reqid = create_reqid
+      else
+        populate
+      end
       return self
     end
     

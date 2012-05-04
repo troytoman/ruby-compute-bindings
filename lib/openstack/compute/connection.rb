@@ -86,6 +86,7 @@ module Compute
           puts "REQUEST: #{method} => #{path}"
           puts data if data
           puts "RESPONSE: #{response.body}"
+          puts "REQUEST ID: " + response['x-compute-request-id']
           puts '----------------------------------------'
       end
       raise OpenStack::Compute::Exception::ExpiredAuthToken if response.code == "401"
@@ -233,7 +234,7 @@ module Compute
       response = csreq("POST",svrmgmthost,"#{svrmgmtpath}/servers",svrmgmtport,svrmgmtscheme,{'content-type' => 'application/json'},data)
       OpenStack::Compute::Exception.raise_exception(response) unless response.code.match(/^20.$/)
       server_info = JSON.parse(response.body)['server']
-      server = OpenStack::Compute::Server.new(self,server_info['id'])
+      server = OpenStack::Compute::Server.new(self,server_info['id'],response['x-compute-request-id'])
       server.adminPass = server_info['adminPass']
       return server
     end
